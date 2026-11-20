@@ -6,6 +6,20 @@
 <title>Logbook — Diário de Bordo Digital</title>
 <meta name="theme-color" content="#070d17">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link id="mfLink" rel="manifest">
+<script>
+(function(){
+  var ic="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230d1524'/%3E%3Crect x='24' y='24' width='464' height='464' rx='96' fill='none' stroke='%23f97316' stroke-width='20'/%3E%3Ctext x='256' y='305' font-family='sans-serif' font-size='190' font-weight='900' fill='%23f97316' text-anchor='middle'%3ELB%3C/text%3E%3C/svg%3E";
+  var mf={name:"Logbook — Diário de Bordo Digital",short_name:"Logbook",start_url:location.href.split("#")[0],scope:"./",display:"standalone",background_color:"#070d17",theme_color:"#070d17",icons:[{src:ic,sizes:"512x512",type:"image/png",purpose:"any"},{src:ic,sizes:"192x192",type:"image/png",purpose:"any"}]};
+  var l=document.getElementById("mfLink");
+  if(l)l.href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:"application/manifest+json"}));
+  if("serviceWorker" in navigator){
+    var swCode="self.addEventListener('install',function(e){self.skipWaiting()});self.addEventListener('activate',function(e){e.waitUntil(clients.claim())});self.addEventListener('fetch',function(e){e.respondWith(fetch(e.request).catch(function(){return caches.match(e.request)}))});";
+    navigator.serviceWorker.register(URL.createObjectURL(new Blob([swCode],{type:"application/javascript"}))).catch(function(){});
+  }
+})();
+</script>
 <style>
 :root{--bg:#070d17;--s1:#0d1524;--s2:#121d31;--bd:#1e2d4a;--tx:#f1f5f9;--mt:#94a3b8;--or:#f97316;--cy:#38bdf8;--gn:#10b981;--am:#f59e0b;--rd:#ef4444}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
