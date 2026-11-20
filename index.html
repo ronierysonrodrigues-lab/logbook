@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Logbook — Diário de Bordo Digital</title>
+  <meta name="theme-color" content="#070d17" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <link id="pwaManifest" rel="manifest" />
+  <style>
+    :root {
+      --bg: #070d17;
+      --surface: #0d1524;
+      --surface-2: #121d31;
+      --border: #1e2d4a;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --orange: #f97316;
+      --cyan: #38bdf8;
+      --green: #10b981;
+      --amber: #f59e0b;
+      --red: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; min-height: 100vh; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    button, input, select, textarea { font-family: inherit; color: inherit; }
+    button { cursor: pointer; border: none; background: none; }
+
+    /* Layout Tela Cheia Responsivo */
+    .app-shell { display: flex; width: 100%; min-height: 100vh; }
+
+    /* Sidebar Tablet / Desktop */
+    .sidebar {
+      width: 240px; flex-shrink: 0; background: #0a111e; border-right: 1px solid var(--border);
+      padding: 20px 14px; display: flex; flex-direction: column; justify-content: space-between;
+      position: sticky; top: 0; height: 100vh;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 18px; border-bottom: 1px solid var(--border); }
+    .brand-icon {
+      width: 40px; height: 40px; border-radius: 12px; background: rgba(249,115,22,.15);
+      border: 1px solid rgba(249,115,22,.4); display: flex; align-items: center; justify-content: center; color: var(--orange); flex-shrink: 0;
+    }
+    .brand h1 { font-size: 18px; font-weight: 800; letter-spacing: -.3px; }
+    .brand p { font-size: 11px; color: var(--muted); }
+
+    .nav-list { display: flex; flex-direction: column; gap: 6px; margin-top: 18px; }
+    .nav-btn {
+      display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 12px;
+      border-radius: 10px; font-size: 13px; font-weight: 600; color: var(--muted); text-align: left;
+      transition: .15s;
+    }
+    .nav-btn:hover { background: var(--surface); color: var(--text); }
+    .nav-btn.active { background: rgba(249,115,22,.15); color: var(--orange); border: 1px solid rgba(249,115,22,.35); }
+
+    .btn-primary {
+      background: var(--orange); color: #fff; font-weight: 700; font-size: 13px;
+      padding: 12px 16px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      box-shadow: 0 6px 18px rgba(249,115,22,.28); transition: .15s;
+    }
+    .btn-primary:active { transform: scale(.98); }
+    .btn-ghost {
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--text);
+      font-size: 12px; font-weight: 600; padding: 8px 12px; border-radius: 10px; display: inline-flex; align-items: center; gap: 6px;
+    }
+
+    /* Main Content */
+    .main { flex: 1; min-width: 0; padding: 20px 24px 90px; }
+    .topbar {
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+      margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
+    }
+    .topbar-title h2 { font-size: 20px; font-weight: 800; }
+    .topbar-title span { font-size: 12px; color: var(--muted); }
+    .topbar-actions { display: flex; align-items: center; gap: 8px; }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Cards & Grids */
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .grid-2 { display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .grid-equal { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px; }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 16px;
+    }
+    .card-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+    .card-title { font-size: 13px; font-weight: 700; color: var(--text); text-transform: uppercase; letter-spacing: .4px; }
+    .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; }
+    .kpi-label { font-size: 11px; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+    .kpi-val { font-size: 24px; font-weight: 800; margin-top: 4px; }
+    .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* Chips & Segmented */
+    .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .chip {
+      padding: 7px 13px; border-radius: 999px; font-size: 12px; font-weight: 600;
+      background: var(--surface); border: 1px solid var(--border); color: var(--muted);
+    }
+    .chip.active { background: rgba(249,115,22,.16); border-color: var(--orange); color: var(--orange); }
+
+    /* Week Strip */
+    .week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 14px; }
+    .day-pill {
+      background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 4px;
+      text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    .day-pill.active { background: rgba(249,115,22,.18); border-color: var(--orange); }
+    .day-pill span { font-size: 10px; color: var(--muted); text-transform: uppercase; }
+    .day-pill strong { font-size: 14px; }
+    .day-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--cyan); margin-top: 2px; }
+
+    /* Task Item */
+    .task-item {
+      background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px;
+      margin-bottom: 10px; display: flex; align-items: flex-start; gap: 12px;
+    }
+    .check-box {
+      width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--muted); flex-shrink: 0; margin-top: 2px;
+      display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800;
+    }
+    .task-item.done .check-box { background: var(--green); border-color: var(--green); color: #052e16; }
+    .task-item.done .task-title { text-decoration: line-through; opacity: .7; }
+    .task-body { flex: 1; min-width: 0; }
+    .task-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+    .b-trabalho { background: rgba(249,115,22,.16); color: var(--orange); }
+    .b-mestrado { background: rgba(56,189,248,.16); color: var(--cyan); }
+    .b-pessoal { background: rgba(16,185,129,.16); color: var(--green); }
+    .task-title { font-size: 14px; font-weight: 700; }
+    .task-desc { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+    .task-meta { font-size: 11px; color: var(--muted); margin-top: 6px; display: flex; gap: 12px; }
+
+    /* Ranking Row */
+    .rank-row {
+      background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+      margin-bottom: 8px; cursor: pointer;
+    }
+    .rank-row.selected { border-color: var(--orange); background: rgba(249,115,22,.08); }
+    .rank-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .rank-count { font-size: 13px; font-weight: 800; color: var(--orange); background: rgba(249,115,22,.15); padding: 2px 8px; border-radius: 6px; }
+    .bar-bg { width: 100%; height: 6px; background: #0a111e; border-radius: 999px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 999px; }
+
+    /* Forms */
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; }
+    .input, select, textarea {
+      width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px;
+      padding: 10px 12px; font-size: 13px; outline: none;
+    }
+    .input:focus, select:focus, textarea:focus { border-color: var(--orange); }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(2,6,14,.82); display: none;
+      align-items: center; justify-content: center; padding: 16px; z-index: 50;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px;
+    }
+
+    /* Bottom Nav Mobile */
+    .bottom-nav {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #0a111e;
+      border-top: 1px solid var(--border); padding: 8px 6px; z-index: 40; justify-content: space-around;
+    }
+    .bnav-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; color: var(--muted); padding: 4px 8px; }
+    .bnav-btn.active { color: var(--orange); }
+
+    /* Toast */
+    .toast {
+      position: fixed; top: 16px; right: 16px; background: var(--surface-2); border: 1px solid var(--orange);
+      color: var(--text); padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0,0,0,.5); z-index: 99; display: none; max-width: 340px;
+    }
+
+    @media (max-width: 820px) {
+      .sidebar { display: none; }
+      .bottom-nav { display: flex; }
+      .main { padding: 14px 14px 82px; }
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .grid-2, .grid-equal { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+
+  <div class="app-shell">
+    <!-- SIDEBAR TABLET / DESKTOP -->
+    <aside class="sidebar">
+      <div>
+        <div class="brand">
+          <div class="brand-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+          </div>
+          <div>
+            <h1 id="appNameSide">Logbook</h1>
+            <p>Diário de Bordo Digital</p>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button type="button" class="nav-btn active" data-tab="agenda">📅 Agenda Diária</button>
+          <button type="button" class="nav-btn" data-tab="desempenho">📊 Desempenho</button>
+          <button type="button" class="nav-btn" data-tab="historico">🔍 Histórico & Busca</button>
+          <button type="button" class="nav-btn" data-tab="config">🔔 Alertas & App</button>
+        </nav>
+      </div>
+
+      <button type="button" class="btn-primary" id="btnNewSide" style="width:100%;">+ Novo Registro</button>
+    </aside>
+
+    <!-- ÁREA PRINCIPAL -->
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-title">
+          <h2 id="pageTitle">Agenda Diária</h2>
+          <span id="pageSub">Controle operacional, acadêmico e pessoal</span>
+        </div>
+        <div class="topbar-actions">
+          <button type="button" class="btn-ghost" id="btnToday">Hoje</button>
+          <button type="button" class="btn-ghost" id="btnQuickBell" title="Testar Notificação">🔔</button>
+          <button type="button" class="btn-primary" id="btnNewTop">+ Registrar</button>
+        </div>
+      </header>
+
+      <!-- ABA 1: AGENDA DIÁRIA -->
+      <section id="view-agenda" class="view active">
+        <div class="grid-4" id="agendaKpis"></div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Semana & Linha do Tempo</span>
+              <div style="display:flex;gap:6px;">
+                <button type="button" class="btn-ghost" id="btnPrevWeek">◀</button>
+                <button type="button" class="btn-ghost" id="btnNextWeek">▶</button>
+              </div>
+            </div>
+            <div class="week-strip" id="weekStrip"></div>
+            <div class="chip-row" id="agendaCatFilter">
+              <button type="button" class="chip active" data-acat="all">Todas</button>
+              <button type="button" class="chip" data-acat="trabalho">💼 Trabalho</button>
+              <button type="button" class="chip" data-acat="mestrado">🎓 Mestrado</button>
+              <button type="button" class="chip" data-acat="pessoal">🏠 Pessoal</button>
+            </div>
+            <div id="agendaTaskList"></div>
+          </div>
+
+          <div>
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Lançamento Rápido (1 Toque)</span>
+              </div>
+              <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Toque para registrar imediatamente no dia selecionado:</p>
+              <div class="chip-row" id="quickTemplates"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Pendências Gerais em Aberto</span>
+              </div>
+              <div id="pendingBox"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 2: DESEMPENHO -->
+      <section id="view-desempenho" class="view">
+        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;margin-bottom:12px;">
+          <div class="chip-row" id="periodChips" style="margin:0;">
+            <button type="button" class="chip" data-period="week">Semanal</button>
+            <button type="button" class="chip active" data-period="month">Mensal</button>
+            <button type="button" class="chip" data-period="quarter">Trimestral</button>
+            <button type="button" class="chip" data-period="year">Anual</button>
+          </div>
+          <div class="chip-row" id="perfCatChips" style="margin:0;">
+            <button type="button" class="chip active" data-pcat="all">Todas Categorias</button>
+            <button type="button" class="chip" data-pcat="trabalho">💼 Trabalho</button>
+            <button type="button" class="chip" data-pcat="mestrado">🎓 Mestrado</button>
+            <button type="button" class="chip" data-pcat="pessoal">🏠 Pessoal</button>
+          </div>
+        </div>
+
+        <div class="grid-4" id="perfKpis"></div>
+
+        <div class="grid-equal">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Desempenho por Categoria (Gráfico)</span>
+              <span style="font-size:11px;color:var(--muted);">Toque na barra p/ filtrar</span>
+            </div>
+            <div id="catChartBox"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Proporção Realizadas vs. Pendentes</span>
+            </div>
+            <div id="donutBox"></div>
+          </div>
+        </div>
+
+        <div class="grid-equal">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Quantidade por Demanda Realizada</span>
+              <button type="button" class="chip" id="btnClearRank" style="display:none;padding:4px 10px;font-size:11px;">Limpar filtro</button>
+            </div>
+            <div id="demandRankingBox"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Detalhamento (Do que se trata)</span>
+              <span id="perfListCount" style="font-size:12px;color:var(--orange);font-weight:700;">0 itens</span>
+            </div>
+            <div class="chip-row" id="perfStatusChips">
+              <button type="button" class="chip active" data-pstatus="all">Todas</button>
+              <button type="button" class="chip" data-pstatus="done">Realizadas</button>
+              <button type="button" class="chip" data-pstatus="pending">Pendentes</button>
+            </div>
+            <div id="perfDetailList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABA 3: HISTÓRICO & BUSCA -->
+      <section id="view-historico" class="view">
+        <div class="card">
+          <div class="grid-equal" style="margin-bottom:0;">
+            <div class="field" style="margin-bottom:0;">
+              <label>Buscar por demanda ou descrição</label>
+              <input type="text" id="histSearch" class="input" placeholder="Ex: Banco CX1, Combustível, Artigo..." />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="field" style="margin-bottom:0;">
+                <label>Categoria</label>
+                <select id="histCat">
+                  <option value="all">Todas</option>
+                  <option value="trabalho">Trabalho</option>
+                  <option value="mestrado">Mestrado</option>
+                  <option value="pessoal">Vida Pessoal</option>
+                </select>
+              </div>
+              <div class="field" style="margin-bottom:0;">
+                <label>Status</label>
+                <select id="histStatus">
+                  <option value="all">Todos</option>
+                  <option value="done">Realizadas</option>
+                  <option value="pending">Pendentes</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="histList"></div>
+      </section>
+
+      <!-- ABA 4: ALERTAS & APP -->
+      <section id="view-config" class="view">
+        <div class="grid-equal">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Notificações & Lembretes Diários</span>
+            </div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Configure alertas diários para registrar ou revisar seu diário de bordo:</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="field">
+                <label>Lembrete 1 (Manhã)</label>
+                <input type="time" id="remTime1" class="input" value="08:30" />
+              </div>
+              <div class="field">
+                <label>Lembrete 2 (Fechamento)</label>
+                <input type="time" id="remTime2" class="input" value="21:00" />
+              </div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+              <button type="button" class="btn-primary" id="btnEnableNotif">Ativar Permissão</button>
+              <button type="button" class="btn-ghost" id="btnSaveNotif">Salvar Horários</button>
+              <button type="button" class="btn-ghost" id="btnTestNotif">Testar Alerta Agora</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Personalização & Backup</span>
+            </div>
+            <div class="field">
+              <label>Nome do Aplicativo</label>
+              <div style="display:flex;gap:8px;">
+                <input type="text" id="inputAppName" class="input" value="Logbook" />
+                <button type="button" class="btn-primary" id="btnSaveName">Salvar</button>
+              </div>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;">
+              <button type="button" class="btn-ghost" id="btnExportJson">⬇ Exportar Backup (.JSON)</button>
+              <button type="button" class="btn-ghost" id="btnResetDemo" style="color:var(--red);">Restaurar Dados Exemplo</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- NAVEGAÇÃO INFERIOR MOBILE -->
+  <nav class="bottom-nav">
+    <button type="button" class="bnav-btn active" data-tab="agenda"><span>📅</span>Agenda</button>
+    <button type="button" class="bnav-btn" data-tab="desempenho"><span>📊</span>Desempenho</button>
+    <button type="button" class="bnav-btn" id="btnNewMobile"><span style="color:var(--orange);font-size:16px;">➕</span>Novo</button>
+    <button type="button" class="bnav-btn" data-tab="historico"><span>🔍</span>Histórico</button>
+    <button type="button" class="bnav-btn" data-tab="config"><span>🔔</span>App</button>
+  </nav>
+
+  <!-- MODAL NOVO / EDITAR REGISTRO -->
+  <div class="modal-backdrop" id="taskModal">
+    <div class="modal">
+      <div class="card-header">
+        <span class="card-title" id="modalTitle">Novo Registro no Diário</span>
+        <button type="button" class="btn-ghost" id="btnCloseModal">✕</button>
+      </div>
+      <form id="taskForm">
+        <input type="hidden" id="editId" />
+        <div class="field">
+          <label>Categoria</label>
+          <select id="fCat">
+            <option value="trabalho">💼 Trabalho</option>
+            <option value="mestrado">🎓 Mestrado</option>
+            <option value="pessoal">🏠 Vida Pessoal</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Atalhos Padronizados (Toque para preencher)</label>
+          <div class="chip-row" id="modalChips" style="margin-bottom:0;"></div>
+        </div>
+        <div class="field">
+          <label>Nome da Demanda / Tarefa</label>
+          <input type="text" id="fTitle" class="input" required placeholder="Ex: Auditoria Banco CX1" />
+        </div>
+        <div class="field">
+          <label>Do que se trata (Detalhes / Evidência)</label>
+          <textarea id="fDesc" rows="2" class="input" placeholder="Descreva o que foi analisado, concluído ou observado..."></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+          <div class="field">
+            <label>Data</label>
+            <input type="date" id="fDate" class="input" required />
+          </div>
+          <div class="field">
+            <label>Horas</label>
+            <input type="number" step="0.5" min="0.5" max="24" id="fHours" class="input" value="1" />
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <select id="fStatus">
+              <option value="done">Realizada</option>
+              <option value="pending">Pendente</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+          <button type="button" class="btn-ghost" id="btnCancelModal">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar Registro</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // Manifest PWA embutido
+      var manifestObj = {
+        name: "Logbook — Diário de Bordo Digital",
+        short_name: "Logbook",
+        start_url: "./",
+        display: "standalone",
+        background_color: "#070d17",
+        theme_color: "#070d17",
+        icons: [{
+          src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='112' fill='%230d1524'/%3E%3Cpath d='M144 136h96a32 32 0 0 1 32 32v208a24 24 0 0 0-24-24H144V136zm224 0h-96a32 32 0 0 0-32 32v208a24 24 0 0 1 24-24h104V136z' fill='none' stroke='%23f97316' stroke-width='28'/%3E%3C/svg%3E",
+          sizes: "512x512",
+          type: "image/svg+xml"
+        }]
+      };
+      var mEl = document.getElementById("pwaManifest");
+      if (mEl) mEl.href = "data:application/manifest+json," + encodeURIComponent(JSON.stringify(manifestObj));
+
+      var STORAGE_KEY = "logbook_v5_data";
+      var SETTINGS_KEY = "logbook_v5_settings";
+
+      var TEMPLATES = {
+        trabalho: ["Auditoria Banco CX1", "Auditoria de Combustível", "Auditoria Banco Itaú 341", "Conciliação Bancária", "Conferência de Estoque"],
+        mestrado: ["Leitura de Artigo Científico", "Escrita da Dissertação", "Fichamento Bibliográfico", "Revisão Metodológica"],
+        pessoal: ["Treino Físico", "Planejamento Financeiro", "Tempo em Família", "Leitura Pessoal"]
+      };
+
+      function fmtDate(d) {
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, "0");
+        var day = String(d.getDate()).padStart(2, "0");
+        return y + "-" + m + "-" + day;
+      }
+
+      function addDays(dateStr, diff) {
+        var p = dateStr.split("-");
+        var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+        d.setDate(d.getDate() + diff);
+        return fmtDate(d);
+      }
+
+      var todayStr = fmtDate(new Date());
+
+      function seedData() {
+        var list = [];
+        var id = 1;
+        function pushBatch(title, cat, desc, count, hoursEach, status) {
+          for (var i = 0; i < count; i++) {
+            var offset = -(i % 22);
+            list.push({
+              id: "seed_" + (id++),
+              title: title,
+              cat: cat,
+              desc: desc + " (Lote #" + (i + 1) + ")",
+              date: addDays(todayStr, offset),
+              hours: hoursEach,
+              status: status
+            });
+          }
+        }
+        pushBatch("Auditoria Banco CX1", "trabalho", "Conferência de extrato diário, tarifas e conciliação de saldos conta CX1.", 30, 0.5, "done");
+        pushBatch("Auditoria de Combustível", "trabalho", "Cruzamento de abastecimentos da frota, média KM/L e comprovantes fiscais.", 20, 1, "done");
+        pushBatch("Auditoria Banco Itaú 341", "trabalho", "Validação de movimentação bancária e comprovantes de pagamento Itaú 341.", 10, 0.5, "done");
+        pushBatch("Conferência de Estoque", "trabalho", "Análise de divergências físico vs. sistema e ajustes de inventário.", 3, 1.5, "pending");
+        pushBatch("Leitura de Artigo Científico", "mestrado", "Análise crítica e fichamento para referencial teórico do mestrado.", 8, 1.5, "done");
+        pushBatch("Escrita da Dissertação", "mestrado", "Redação e estruturação dos capítulos metodológicos.", 2, 2, "pending");
+        pushBatch("Treino Físico", "pessoal", "Atividade física aeróbica e fortalecimento.", 12, 1, "done");
+        pushBatch("Planejamento Financeiro", "pessoal", "Revisão do orçamento mensal e metas familiares.", 1, 1, "pending");
+        return list;
+      }
+
+      var memTasks = null;
+      function loadTasks() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        if (!memTasks) memTasks = seedData();
+        saveTasks(memTasks);
+        return memTasks;
+      }
+
+      function saveTasks(arr) {
+        memTasks = arr;
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); } catch (e) {}
+      }
+
+      function loadSettings() {
+        try {
+          var raw = localStorage.getItem(SETTINGS_KEY);
+          if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return { appName: "Logbook", rem1: "08:30", rem2: "21:00", lastFired: "" };
+      }
+
+      function saveSettings(obj) {
+        try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(obj)); } catch (e) {}
+      }
+
+      var state = {
+        tab: "agenda",
+        selectedDate: todayStr,
+        agendaCat: "all",
+        perfPeriod: "month",
+        perfCat: "all",
+        perfStatus: "all",
+        rankFilterTitle: null
+      };
+
+      var tasks = loadTasks();
+      var settings = loadSettings();
+
+      function showToast(msg) {
+        var t = document.getElementById("toast");
+        t.textContent = msg;
+        t.style.display = "block";
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function () { t.style.display = "none"; }, 3200);
+      }
+
+      function catLabel(c) {
+        if (c === "trabalho") return "💼 Trabalho";
+        if (c === "mestrado") return "🎓 Mestrado";
+        return "🏠 Vida Pessoal";
+      }
+
+      function switchTab(tabName) {
+        state.tab = tabName;
+        var views = document.querySelectorAll(".view");
+        for (var i = 0; i < views.length; i++) views[i].classList.remove("active");
+        var target = document.getElementById("view-" + tabName);
+        if (target) target.classList.add("active");
+
+        var btns = document.querySelectorAll("[data-tab]");
+        for (var j = 0; j < btns.length; j++) {
+          btns[j].classList.toggle("active", btns[j].getAttribute("data-tab") === tabName);
+        }
+
+        var titles = {
+          agenda: ["Agenda Diária", "Registro e execução das demandas por data"],
+          desempenho: ["Desempenho & Indicadores", "Análise quantitativa por categoria e demanda realizada"],
+          historico: ["Histórico & Busca", "Consulta completa de todas as atividades registradas"],
+          config: ["Alertas & Configurações", "Lembretes diários, personalização e backup"]
+        };
+        document.getElementById("pageTitle").textContent = titles[tabName][0];
+        document.getElementById("pageSub").textContent = titles[tabName][1];
+        renderAll();
+      }
+
+      function filterByPeriod(list, period) {
+        var now = new Date();
+        var daysMap = { week: 7, month: 30, quarter: 90, year: 365 };
+        var limit = daysMap[period] || 30;
+        return list.filter(function (t) {
+          var p = t.date.split("-");
+          var d = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+          var diff = (now - d) / (1000 * 60 * 60 * 24);
+          return diff >= -7 && diff <= limit;
+        });
+      }
+
+      // RENDER AGENDA
+      function renderAgenda() {
+        var dayTasks = tasks.filter(function (t) { return t.date === state.selectedDate; });
+        var doneDay = dayTasks.filter(function (t) { return t.status === "done"; });
+        var pendDay = dayTasks.filter(function (t) { return t.status === "pending"; });
+        var hoursDay = doneDay.reduce(function (s, t) { return s + Number(t.hours || 0); }, 0);
+        var allPending = tasks.filter(function (t) { return t.status === "pending"; });
+
+        document.getElementById("agendaKpis").innerHTML =
+          '<div class="kpi-card"><div class="kpi-label">Data Selecionada</div><div class="kpi-val" style="font-size:18px;color:var(--cyan);">' + state.selectedDate.split("-").reverse().join("/") + '</div><div class="kpi-sub">' + dayTasks.length + ' demandas no dia</div></div>' +
+          '<div class="kpi-card"><div class="kpi-label">Realizadas (Dia)</div><div class="kpi-val" style="color:var(--green);">' + doneDay.length + '</div><div class="kpi-sub">Concluídas na data</div></div>' +
+          '<div class="kpi-card"><div class="kpi-label">Pendentes (Dia)</div><div class="kpi-val" style="color:var(--amber);">' + pendDay.length + '</div><div class="kpi-sub">Aguardando execução</div></div>' +
+          '<div class="kpi-card"><div class="kpi-label">Horas Realizadas</div><div class="kpi-val" style="color:var(--orange);">' + hoursDay.toFixed(1) + 'h</div><div class="kpi-sub">Tempo produtivo líquido</div></div>';
+
+        // Week strip
+        var p = state.selectedDate.split("-");
+        var base = new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+        var dow = base.getDay();
+        var startWeek = new Date(base);
+        startWeek.setDate(base.getDate() - dow);
+        var names = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+        var stripHtml = "";
+        for (var i = 0; i < 7; i++) {
+          var d = new Date(startWeek);
+          d.setDate(startWeek.getDate() + i);
+          var ds = fmtDate(d);
+          var hasItems = tasks.some(function (t) { return t.date === ds; });
+          stripHtml += '<button type="button" class="day-pill ' + (ds === state.selectedDate ? 'active' : '') + '" data-sel-date="' + ds + '">' +
+            '<span>' + names[i] + '</span><strong>' + d.getDate() + '</strong>' +
+            (hasItems ? '<div class="day-dot"></div>' : '<div style="height:7px;"></div>') +
+            '</button>';
+        }
+        document.getElementById("weekStrip").innerHTML = stripHtml;
+
+        // Filtered day list
+        var filteredDay = dayTasks.filter(function (t) {
+          return state.agendaCat === "all" || t.cat === state.agendaCat;
+        });
+
+        var listHtml = filteredDay.length ? filteredDay.map(renderTaskCard).join("") :
+          '<p style="font-size:13px;color:var(--muted);padding:16px 0;text-align:center;">Nenhuma demanda nesta data/categoria. Use "+ Registrar" ou os atalhos ao lado.</p>';
+        document.getElementById("agendaTaskList").innerHTML = listHtml;
+
+        // Quick templates
+        var qHtml = "";
+        Object.keys(TEMPLATES).forEach(function (cat) {
+          TEMPLATES[cat].slice(0, 2).forEach(function (title) {
+            qHtml += '<button type="button" class="chip" data-quick-cat="' + cat + '" data-quick-title="' + title + '">+ ' + title + '</button>';
+          });
+        });
+        document.getElementById("quickTemplates").innerHTML = qHtml;
+
+        // Pending general
+        document.getElementById("pendingBox").innerHTML = allPending.length
+          ? allPending.slice(0, 6).map(renderTaskCard).join("")
+          : '<p style="font-size:12px;color:var(--green);">Todas as demandas estão em dia!</p>';
+      }
+
+      function renderTaskCard(t) {
+        var isDone = t.status === "done";
+        return '<div class="task-item ' + (isDone ? 'done' : '') + '">' +
+          '<button type="button" class="check-box" data-toggle-id="' + t.id + '" title="Alternar status">' + (isDone ? '✓' : '') + '</button>' +
+          '<div class="task-body">' +
+            '<div class="task-top">' +
+              '<span class="badge b-' + t.cat + '">' + catLabel(t.cat) + '</span>' +
+              '<span style="font-size:11px;color:var(--muted);">' + t.date.split("-").reverse().join("/") + ' • ' + t.hours + 'h</span>' +
+            '</div>' +
+            '<div class="task-title">' + escapeHtml(t.title) + '</div>' +
+            (t.desc ? '<div class="task-desc"><strong>Do que se trata:</strong> ' + escapeHtml(t.desc) + '</div>' : '') +
+          '</div>' +
+          '<button type="button" class="btn-ghost" style="padding:4px 8px;font-size:11px;" data-del-id="' + t.id + '" title="Excluir">🗑</button>' +
+        '</div>';
+      }
+
+      // RENDER DESEMPENHO
+      function renderDesempenho() {
+        var periodTasks = filterByPeriod(tasks, state.perfPeriod);
+        var catFiltered = periodTasks.filter(function (t) {
+          return state.perfCat === "all" || t.cat === state.perfCat;
+        });
+
+        var doneAll = catFiltered.filter(function (t) { return t.status === "done"; });
+        var pendAll = catFiltered.filter(function (t) { return t.status === "pending"; });
+        var totalHours = doneAll.reduce(function (s, t) { return s + Number(t.hours || 0); }, 0);
+        var rate = catFiltered.length ? Math.round((doneAll.length / catFiltered.length) * 100) : 0;
+
+        document.getElementById("perfKpis").innerHTML =
+          '<div class="kpi-card"><div class="kpi-label">Total no Período</div><div class="kpi-val">' + catFiltered.length + '</div><div class="kpi-sub">Demandas mapeadas</div></div>' +
+          '<div class="kpi-card"><div class="kpi-label">Realizadas</div><div class="kpi-val" style="color:var(--green);">' + doneAll.length + '</div><div class="kpi-sub">' + rate + '% de conclusão</div></div>' +
+          '<div class="kpi-card"><div class="kpi-label">Pendentes</div><div class="kpi-val" style="color:var(--amber);">' + pendAll.length + '</div><div class="kpi-sub">Em aberto no período</div></div>' +
+          '<div class="kpi-card"><div class="kpi-label">Horas Dedicadas</div><div class="kpi-val" style="color:var(--cyan);">' + totalHours.toFixed(1) + 'h</div><div class="kpi-sub">Tarefas concluídas</div></div>';
+
+        // Gráfico SVG por Categoria
+        var cats = [
+          { key: "trabalho", label: "Trabalho", color: "#f97316" },
+          { key: "mestrado", label: "Mestrado", color: "#38bdf8" },
+          { key: "pessoal", label: "Pessoal", color: "#10b981" }
+        ];
+        var stats = cats.map(function (c) {
+          var items = periodTasks.filter(function (t) { return t.cat === c.key; });
+          var d = items.filter(function (t) { return t.status === "done"; }).length;
+          var p = items.filter(function (t) { return t.status === "pending"; }).length;
+          return { key: c.key, label: c.label, color: c.color, done: d, pend: p };
+        });
+        var maxVal = Math.max(5, Math.max.apply(null, stats.map(function (s) { return Math.max(s.done, s.pend); })));
+
+        var svgW = 360, svgH = 190, chartBottom = 148, maxBarH = 110;
+        var svg = '<svg viewBox="0 0 ' + svgW + ' ' + svgH + '" style="width:100%;height:auto;display:block;">';
+        // Linhas horizontais
+        [0, 0.5, 1].forEach(function (ratio) {
+          var y = chartBottom - ratio * maxBarH;
+          svg += '<line x1="25" y1="' + y + '" x2="345" y2="' + y + '" stroke="#1e2d4a" stroke-dasharray="3 3" />';
+          svg += '<text x="18" y="' + (y + 3) + '" fill="#94a3b8" font-size="9" text-anchor="end">' + Math.round(maxVal * ratio) + '</text>';
+        });
+
+        stats.forEach(function (s, idx) {
+          var cx = 78 + idx * 105;
+          var hDone = (s.done / maxVal) * maxBarH;
+          var hPend = (s.pend / maxVal) * maxBarH;
+          var activeAlpha = (state.perfCat === "all" || state.perfCat === s.key) ? "1" : "0.35";
+
+          svg += '<g style="cursor:pointer;opacity:' + activeAlpha + ';" data-chart-cat="' + s.key + '">';
+          // Barra Realizada
+          svg += '<rect x="' + (cx - 26) + '" y="' + (chartBottom - hDone) + '" width="22" height="' + Math.max(hDone, 2) + '" rx="4" fill="' + s.color + '" />';
+          svg += '<text x="' + (cx - 15) + '" y="' + (chartBottom - hDone - 5) + '" fill="#f1f5f9" font-size="10" font-weight="bold" text-anchor="middle">' + s.done + '</text>';
+          // Barra Pendente
+          svg += '<rect x="' + (cx + 2) + '" y="' + (chartBottom - hPend) + '" width="22" height="' + Math.max(hPend, 2) + '" rx="4" fill="none" stroke="' + s.color + '" stroke-width="1.5" stroke-dasharray="3 2" />';
+          svg += '<text x="' + (cx + 13) + '" y="' + (chartBottom - hPend - 5) + '" fill="#94a3b8" font-size="10" text-anchor="middle">' + s.pend + '</text>';
+          // Rótulo
+          svg += '<text x="' + cx + '" y="168" fill="#f1f5f9" font-size="11" font-weight="bold" text-anchor="middle">' + s.label + '</text>';
+          svg += '</g>';
+        });
+        svg += '</svg>' +
+          '<div style="display:flex;justify-content:center;gap:16px;font-size:11px;color:var(--muted);margin-top:4px;">' +
+          '<span>■ Barra Sólida: Realizadas</span><span>⬚ Barra Tracejada: Pendentes</span></div>';
+        document.getElementById("catChartBox").innerHTML = svg;
+
+        // Gráfico de Rosca (Donut)
+        var total = catFiltered.length || 1;
+        var donePct = Math.round((doneAll.length / total) * 100);
+        var r = 44, circ = 2 * Math.PI * r;
+        var dashDone = (doneAll.length / total) * circ;
+        document.getElementById("donutBox").innerHTML =
+          '<div style="display:flex;align-items:center;justify-content:space-around;gap:16px;padding:10px 0;">' +
+            '<svg width="120" height="120" viewBox="0 0 120 120">' +
+              '<circle cx="60" cy="60" r="' + r + '" fill="none" stroke="#1e2d4a" stroke-width="14" />' +
+              '<circle cx="60" cy="60" r="' + r + '" fill="none" stroke="#10b981" stroke-width="14" stroke-dasharray="' + dashDone + ' ' + circ + '" transform="rotate(-90 60 60)" stroke-linecap="round" />' +
+              '<text x="60" y="64" fill="#f1f5f9" font-size="18" font-weight="800" text-anchor="middle">' + donePct + '%</text>' +
+            '</svg>' +
+            '<div style="flex:1;">' +
+              '<div style="margin-bottom:10px;"><div style="font-size:12px;color:var(--muted);">Realizadas</div><strong style="font-size:18px;color:var(--green);">' + doneAll.length + ' tarefas</strong></div>' +
+              '<div><div style="font-size:12px;color:var(--muted);">Pendentes</div><strong style="font-size:18px;color:var(--amber);">' + pendAll.length + ' tarefas</strong></div>' +
+            '</div>' +
+          '</div>';
+
+        // Ranking: Quantidade por Demanda Realizada
+        var map = {};
+        doneAll.forEach(function (t) {
+          var k = t.title.trim();
+          if (!map[k]) map[k] = { title: k, count: 0, hours: 0, cat: t.cat };
+          map[k].count += 1;
+          map[k].hours += Number(t.hours || 0);
+        });
+        var ranking = Object.keys(map).map(function (k) { return map[k]; }).sort(function (a, b) { return b.count - a.count; });
+        var maxRank = ranking.length ? ranking[0].count : 1;
+
+        document.getElementById("btnClearRank").style.display = state.rankFilterTitle ? "inline-block" : "none";
+
+        document.getElementById("demandRankingBox").innerHTML = ranking.length
+          ? ranking.map(function (item) {
+              var pct = Math.round((item.count / maxRank) * 100);
+              var isSel = state.rankFilterTitle === item.title;
+              var barColor = item.cat === "trabalho" ? "var(--orange)" : (item.cat === "mestrado" ? "var(--cyan)" : "var(--green)");
+              return '<div class="rank-row ' + (isSel ? 'selected' : '') + '" data-rank-title="' + escapeHtml(item.title) + '">' +
+                '<div class="rank-top">' +
+                  '<div><span class="rank-count">' + item.count + 'x</span> <strong style="font-size:13px;margin-left:4px;">' + escapeHtml(item.title) + '</strong></div>' +
+                  '<span style="font-size:11px;color:var(--muted);">' + item.hours.toFixed(1) + 'h</span>' +
+                '</div>' +
+                '<div class="bar-bg"><div class="bar-fill" style="width:' + pct + '%;background:' + barColor + ';"></div></div>' +
+              '</div>';
+            }).join("")
+          : '<p style="font-size:12px;color:var(--muted);">Nenhuma tarefa concluída neste filtro.</p>';
+
+        // Detalhamento das Tarefas
+        var detailList = catFiltered.filter(function (t) {
+          var stOk = state.perfStatus === "all" || t.status === state.perfStatus;
+          var rkOk = !state.rankFilterTitle || t.title.trim() === state.rankFilterTitle;
+          return stOk && rkOk;
+        });
+
+        document.getElementById("perfListCount").textContent = detailList.length + " itens";
+        document.getElementById("perfDetailList").innerHTML = detailList.length
+          ? detailList.slice(0, 25).map(renderTaskCard).join("")
+          : '<p style="font-size:12px;color:var(--muted);">Nenhuma tarefa encontrada para este filtro.</p>';
+      }
+
+      // RENDER HISTÓRICO
+      function renderHistorico() {
+        var q = (document.getElementById("histSearch").value || "").toLowerCase();
+        var cat = document.getElementById("histCat").value;
+        var st = document.getElementById("histStatus").value;
+
+        var res = tasks.filter(function (t) {
+          var matchText = !q || t.title.toLowerCase().indexOf(q) !== -1 || (t.desc && t.desc.toLowerCase().indexOf(q) !== -1);
+          var matchCat = cat === "all" || t.cat === cat;
+          var matchSt = st === "all" || t.status === st;
+          return matchText && matchCat && matchSt;
+        });
+
+        document.getElementById("histList").innerHTML = res.length
+          ? res.map(renderTaskCard).join("")
+          : '<div class="card"><p style="font-size:13px;color:var(--muted);text-align:center;">Nenhum registro encontrado.</p></div>';
+      }
+
+      function renderAll() {
+        document.getElementById("appNameSide").textContent = settings.appName || "Logbook";
+        document.getElementById("inputAppName").value = settings.appName || "Logbook";
+        document.getElementById("remTime1").value = settings.rem1 || "08:30";
+        document.getElementById("remTime2").value = settings.rem2 || "21:00";
+
+        if (state.tab === "agenda") renderAgenda();
+        if (state.tab === "desempenho") renderDesempenho();
+        if (state.tab === "historico") renderHistorico();
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      }
+
+      // MODAL CONTROLS
+      function openModal(prefCat, prefTitle) {
+        document.getElementById("editId").value = "";
+        document.getElementById("fCat").value = prefCat || "trabalho";
+        document.getElementById("fTitle").value = prefTitle || "";
+        document.getElementById("fDesc").value = "";
+        document.getElementById("fDate").value = state.selectedDate;
+        document.getElementById("fHours").value = "1";
+        document.getElementById("fStatus").value = "done";
+        renderModalChips();
+        document.getElementById("taskModal").classList.add("open");
+      }
+
+      function closeModal() {
+        document.getElementById("taskModal").classList.remove("open");
+      }
+
+      function renderModalChips() {
+        var cat = document.getElementById("fCat").value;
+        var list = TEMPLATES[cat] || [];
+        document.getElementById("modalChips").innerHTML = list.map(function (item) {
+          return '<button type="button" class="chip" data-fill-title="' + escapeHtml(item) + '">' + escapeHtml(item) + '</button>';
+        }).join("");
+      }
+
+      // NOTIFICAÇÕES
+      function triggerNotification(title, body) {
+        showToast(title + ": " + body);
+        if ("Notification" in window && Notification.permission === "granted") {
+          try { new Notification(title, { body: body }); } catch (e) {}
+        }
+      }
+
+      setInterval(function () {
+        var now = new Date();
+        var hhmm = String(now.getHours()).padStart(2, "0") + ":" + String(now.getMinutes()).padStart(2, "0");
+        var key = todayStr + "_" + hhmm;
+        if ((hhmm === settings.rem1 || hhmm === settings.rem2) && settings.lastFired !== key) {
+          settings.lastFired = key;
+          saveSettings(settings);
+          var pend = tasks.filter(function (t) { return t.status === "pending"; }).length;
+          triggerNotification(settings.appName + " — Lembrete", "Hora de atualizar seu diário de bordo! Você tem " + pend + " pendências.");
+        }
+      }, 20000);
+
+      // EVENTOS GLOBAIS (DELEGAÇÃO SEGURA)
+      document.addEventListener("click", function (e) {
+        var tabBtn = e.target.closest("[data-tab]");
+        if (tabBtn) { switchTab(tabBtn.getAttribute("data-tab")); return; }
+
+        var dateBtn = e.target.closest("[data-sel-date]");
+        if (dateBtn) { state.selectedDate = dateBtn.getAttribute("data-sel-date"); renderAgenda(); return; }
+
+        var acatBtn = e.target.closest("[data-acat]");
+        if (acatBtn) {
+          state.agendaCat = acatBtn.getAttribute("data-acat");
+          document.querySelectorAll("[data-acat]").forEach(function (b) { b.classList.toggle("active", b === acatBtn); });
+          renderAgenda();
+          return;
+        }
+
+        var quickBtn = e.target.closest("[data-quick-title]");
+        if (quickBtn) {
+          var qCat = quickBtn.getAttribute("data-quick-cat");
+          var qTitle = quickBtn.getAttribute("data-quick-title");
+          tasks.unshift({
+            id: "t_" + Date.now(),
+            title: qTitle,
+            cat: qCat,
+            desc: "Registro rápido efetuado no diário de bordo.",
+            date: state.selectedDate,
+            hours: 1,
+            status: "done"
+          });
+          saveTasks(tasks);
+          showToast("Registrado: " + qTitle);
+          renderAll();
+          return;
+        }
+
+        var toggleBtn = e.target.closest("[data-toggle-id]");
+        if (toggleBtn) {
+          var tid = toggleBtn.getAttribute("data-toggle-id");
+          tasks = tasks.map(function (t) {
+            if (t.id === tid) t.status = (t.status === "done" ? "pending" : "done");
+            return t;
+          });
+          saveTasks(tasks);
+          renderAll();
+          return;
+        }
+
+        var delBtn = e.target.closest("[data-del-id]");
+        if (delBtn) {
+          var did = delBtn.getAttribute("data-del-id");
+          tasks = tasks.filter(function (t) { return t.id !== did; });
+          saveTasks(tasks);
+          showToast("Registro removido.");
+          renderAll();
+          return;
+        }
+
+        var periodBtn = e.target.closest("[data-period]");
+        if (periodBtn) {
+          state.perfPeriod = periodBtn.getAttribute("data-period");
+          state.rankFilterTitle = null;
+          document.querySelectorAll("[data-period]").forEach(function (b) { b.classList.toggle("active", b === periodBtn); });
+          renderDesempenho();
+          return;
+        }
+
+        var pcatBtn = e.target.closest("[data-pcat]");
+        if (pcatBtn) {
+          state.perfCat = pcatBtn.getAttribute("data-pcat");
+          state.rankFilterTitle = null;
+          document.querySelectorAll("[data-pcat]").forEach(function (b) { b.classList.toggle("active", b === pcatBtn); });
+          renderDesempenho();
+          return;
+        }
+
+        var chartCat = e.target.closest("[data-chart-cat]");
+        if (chartCat) {
+          var clickedCat = chartCat.getAttribute("data-chart-cat");
+          state.perfCat = (state.perfCat === clickedCat) ? "all" : clickedCat;
+          state.rankFilterTitle = null;
+          document.querySelectorAll("[data-pcat]").forEach(function (b) {
+            b.classList.toggle("active", b.getAttribute("data-pcat") === state.perfCat);
+          });
+          renderDesempenho();
+          return;
+        }
+
+        var rankBtn = e.target.closest("[data-rank-title]");
+        if (rankBtn) {
+          var rTitle = rankBtn.getAttribute("data-rank-title");
+          state.rankFilterTitle = (state.rankFilterTitle === rTitle) ? null : rTitle;
+          renderDesempenho();
+          return;
+        }
+
+        var pstatusBtn = e.target.closest("[data-pstatus]");
+        if (pstatusBtn) {
+          state.perfStatus = pstatusBtn.getAttribute("data-pstatus");
+          document.querySelectorAll("[data-pstatus]").forEach(function (b) { b.classList.toggle("active", b === pstatusBtn); });
+          renderDesempenho();
+          return;
+        }
+
+        var fillBtn = e.target.closest("[data-fill-title]");
+        if (fillBtn) {
+          document.getElementById("fTitle").value = fillBtn.getAttribute("data-fill-title");
+          return;
+        }
+      });
+
+      // BOTÕES FIXOS
+      document.getElementById("btnNewSide").onclick = function () { openModal(); };
+      document.getElementById("btnNewTop").onclick = function () { openModal(); };
+      document.getElementById("btnNewMobile").onclick = function () { openModal(); };
+      document.getElementById("btnCloseModal").onclick = closeModal;
+      document.getElementById("btnCancelModal").onclick = closeModal;
+      document.getElementById("fCat").onchange = renderModalChips;
+
+      document.getElementById("btnToday").onclick = function () {
+        state.selectedDate = todayStr;
+        switchTab("agenda");
+      };
+      document.getElementById("btnPrevWeek").onclick = function () {
+        state.selectedDate = addDays(state.selectedDate, -7);
+        renderAgenda();
+      };
+      document.getElementById("btnNextWeek").onclick = function () {
+        state.selectedDate = addDays(state.selectedDate, 7);
+        renderAgenda();
+      };
+      document.getElementById("btnClearRank").onclick = function () {
+        state.rankFilterTitle = null;
+        renderDesempenho();
+      };
+
+      document.getElementById("taskForm").onsubmit = function (e) {
+        e.preventDefault();
+        var title = document.getElementById("fTitle").value.trim();
+        if (!title) return;
+        tasks.unshift({
+          id: "t_" + Date.now(),
+          cat: document.getElementById("fCat").value,
+          title: title,
+          desc: document.getElementById("fDesc").value.trim(),
+          date: document.getElementById("fDate").value,
+          hours: Number(document.getElementById("fHours").value) || 1,
+          status: document.getElementById("fStatus").value
+        });
+        saveTasks(tasks);
+        closeModal();
+        showToast("Registro salvo com sucesso!");
+        renderAll();
+      };
+
+      document.getElementById("histSearch").oninput = renderHistorico;
+      document.getElementById("histCat").onchange = renderHistorico;
+      document.getElementById("histStatus").onchange = renderHistorico;
+
+      document.getElementById("btnEnableNotif").onclick = function () {
+        if (!("Notification" in window)) {
+          showToast("Notificações nativas indisponíveis neste navegador.");
+          return;
+        }
+        Notification.requestPermission().then(function (perm) {
+          showToast(perm === "granted" ? "Notificações ativadas!" : "Permissão negada no navegador.");
+        });
+      };
+
+      document.getElementById("btnSaveNotif").onclick = function () {
+        settings.rem1 = document.getElementById("remTime1").value;
+        settings.rem2 = document.getElementById("remTime2").value;
+        saveSettings(settings);
+        showToast("Horários salvos (" + settings.rem1 + " e " + settings.rem2 + ")");
+      };
+
+      document.getElementById("btnTestNotif").onclick = function () {
+        var pend = tasks.filter(function (t) { return t.status === "pending"; }).length;
+        triggerNotification(settings.appName + " — Teste", "Sistema de alertas ativo! " + pend + " pendências no diário.");
+      };
+      document.getElementById("btnQuickBell").onclick = function () {
+        var pend = tasks.filter(function (t) { return t.status === "pending"; }).length;
+        triggerNotification(settings.appName, "Você possui " + pend + " demandas pendentes.");
+   document.getElementById("btnSaveName").onclick = function () {
+        var val = document.getElementById("inputAppName").value.trim();
+        if (val) {
+          settings.appName val;
+          saveSettings(settings);
+          renderAll();
+          showToast("Nome atualizado para " + val);
+        }
+      };
+
+      document.getElementById("btnExportJson").onclick = function () {
+        var blob = new Blob([JSON.stringify(tasks, null, 2)], { type: "application/json" });
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "logbook_backup_" + todayStr + ".json";
+        a.click();
+      };
+
+      document.getElementById("btnResetDemo").onclick = function () {
+        tasks = seedData();
+        saveTasks(tasks);
+        renderAll();
+        showToast("Dados de exemplo restaurados.");
+      };
+
+      // Inicialização
+      renderAll();
+    })();
+  </script>
+</body>
+</html
